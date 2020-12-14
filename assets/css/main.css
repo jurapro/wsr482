@@ -5,6 +5,8 @@
 }
 
 #game {
+    min-width: 800px;
+    min-height: 600px;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -18,4 +20,9 @@
 
 .elements div {
     position: absolute;
+}
+
+.player {
+    background-color: brown;
+    border-radius: .5rem;
 }
