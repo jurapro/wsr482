@@ -9,11 +9,11 @@ class Drawable {
         this.size = {
             w: 0,
             h: 0
-        }
+        };
         this.offsets = {
             x: 0,
             y: 0
-        }
+        };
         this.speedPerFrame = 0;
     }
 
@@ -33,6 +33,22 @@ class Drawable {
             width: this.size.w + 'px',
             height: this.size.h + 'px'
         });
+    }
+
+    isCollision(element) {
+        const a = {
+            x1: this.position.x,
+            x2: this.position.x + this.size.w,
+            y1: this.position.y,
+            y2: this.position.y + this.size.h,
+        };
+        const b = {
+            x1: element.position.x,
+            x2: element.position.x + element.size.w,
+            y1: element.position.y,
+            y2: element.position.y + element.size.h,
+        };
+        return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
     }
 
     isLeftBorderCollision() {
@@ -58,7 +74,7 @@ class Player extends Drawable {
         this.keys = {
             ArrowLeft: false,
             ArrowRight: false,
-        }
+        };
         this.speedPerFrame = 10;
 
         this.bindKeyEvents();
@@ -95,11 +111,29 @@ class Player extends Drawable {
     }
 }
 
+class Ball extends Drawable {
+    constructor(game) {
+        super(game);
+        this.size = {
+            w: 50,
+            h: 50,
+        };
+        this.position = {
+            x: this.game.$html.width() / 2 - this.size.w / 2,
+            y: this.speedPerFrame + 5,
+        };
+
+        this.speedPerFrame = 10;
+        this.offsets.y = this.speedPerFrame;
+    }
+}
+
 class Game {
     constructor() {
         this.$html = $('#game .elements');
         this.elements = [];
         this.player = this.generate(Player);
+        this.ball = this.generate(Ball);
     }
 
     generate(ClassName) {

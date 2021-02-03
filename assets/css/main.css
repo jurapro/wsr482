@@ -26,3 +26,8 @@
     background-color: brown;
     border-radius: .5rem;
 }
+
+.ball {
+    background-color: green;
+    border-radius: 50%;
+}
