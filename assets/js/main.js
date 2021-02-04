@@ -1,3 +1,9 @@
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //Максимум не включается, минимум включается
+}
+
 class Drawable {
     constructor(game) {
         this.game = game;
@@ -57,6 +63,10 @@ class Drawable {
 
     isRightBorderCollision() {
         return this.position.x + this.size.w + this.speedPerFrame > this.game.$html.width();
+    }
+
+    isTopBorderCollision() {
+        return this.position.y - this.speedPerFrame < 0;
     }
 }
 
@@ -125,8 +135,39 @@ class Ball extends Drawable {
 
         this.speedPerFrame = 10;
         this.offsets.y = this.speedPerFrame;
+        this.offsets.x = 5;
+    }
+
+    update() {
+        super.update();
+        if (this.isCollision(this.game.player) || this.isTopBorderCollision()) {
+            if (getRandomInt(0, 2)) {
+                this.changeRandomDirection();
+            }
+            this.changeDirectionY();
+        }
+        if (this.isLeftBorderCollision() || this.isRightBorderCollision()) {
+            this.changeDirectionX();
+        }
+    }
+
+    changeDirectionY() {
+        this.offsets.y *= -1;
+    }
+
+    changeDirectionX() {
+        this.offsets.x *= -1;
+    }
+
+    changeRandomDirection() {
+        this.offsets.x = getRandomInt(-this.speedPerFrame, this.speedPerFrame);
     }
 }
+
+class Block extends Drawable {
+
+}
+
 
 class Game {
     constructor() {
@@ -134,6 +175,23 @@ class Game {
         this.elements = [];
         this.player = this.generate(Player);
         this.ball = this.generate(Ball);
+        this.blocksGenerate({gap: 50, row: 3, size: {w: 200, h: 50}});
+    }
+
+    blocksGenerate(options) {
+        let top = options.gap;
+        for (let row = 0; row < options.row; row++) {
+            for (let x = options.gap; x < this.$html.width() - options.size.w; x += options.gap + options.size.w) {
+                this.createBlock({x: x, y: top}, {w: options.size.w, h: options.size.h});
+            }
+            top += options.size.h + options.gap;
+        }
+    }
+
+    createBlock(position, size) {
+        let element = this.generate(Block);
+        element.size = size;
+        element.position = position;
     }
 
     generate(ClassName) {

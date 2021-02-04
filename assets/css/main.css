@@ -31,3 +31,8 @@
     background-color: green;
     border-radius: 50%;
 }
+
+.block {
+    background-color: blue;
+    border-radius: .5rem;
+}
