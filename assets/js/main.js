@@ -27,6 +27,10 @@ class Drawable {
         return $(`<div class="element ${this.constructor.name.toLowerCase()}"></div>`);
     }
 
+    removeElement() {
+        this.$html.remove();
+    }
+
     update() {
         this.position.x += this.offsets.x;
         this.position.y += this.offsets.y;
@@ -166,6 +170,14 @@ class Ball extends Drawable {
 
 class Block extends Drawable {
 
+    update() {
+        if (this.isCollision(this.game.ball)) {
+            this.removeElement();
+            document.dispatchEvent(new CustomEvent('block-collision',{
+                detail: { block: this }
+            }));
+        }
+    }
 }
 
 
@@ -176,6 +188,11 @@ class Game {
         this.player = this.generate(Player);
         this.ball = this.generate(Ball);
         this.blocksGenerate({gap: 50, row: 3, size: {w: 200, h: 50}});
+        this.bindKeyEvents();
+    }
+
+    bindKeyEvents() {
+        document.addEventListener('block-collision',evt => this.removeElement(evt.detail.block));
     }
 
     blocksGenerate(options) {
@@ -199,6 +216,15 @@ class Game {
         this.elements.push(element);
         this.$html.append(element.$html);
         return element;
+    }
+
+    removeElement(item) {
+        const ind = this.elements.indexOf(item);
+        if (ind !== -1) {
+            console.log(ind);
+            this.elements.splice(ind, 1);
+
+        }
     }
 
     loop() {
