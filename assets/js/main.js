@@ -140,6 +140,11 @@ class Ball extends Drawable {
         this.speedPerFrame = 10;
         this.offsets.y = this.speedPerFrame;
         this.offsets.x = 5;
+        this.bindKeyEvents();
+    }
+
+    bindKeyEvents() {
+        document.addEventListener('block-collision', () => this.ballBounce());
     }
 
     update() {
@@ -166,6 +171,11 @@ class Ball extends Drawable {
     changeRandomDirection() {
         this.offsets.x = getRandomInt(-this.speedPerFrame, this.speedPerFrame);
     }
+
+    ballBounce() {
+        this.changeRandomDirection();
+        this.changeDirectionY();
+    }
 }
 
 class Block extends Drawable {
@@ -173,8 +183,8 @@ class Block extends Drawable {
     update() {
         if (this.isCollision(this.game.ball)) {
             this.removeElement();
-            document.dispatchEvent(new CustomEvent('block-collision',{
-                detail: { block: this }
+            document.dispatchEvent(new CustomEvent('block-collision', {
+                detail: {block: this}
             }));
         }
     }
@@ -184,15 +194,21 @@ class Block extends Drawable {
 class Game {
     constructor() {
         this.$html = $('#game .elements');
+        this.$panel = $('#game .panel');
+
         this.elements = [];
         this.player = this.generate(Player);
         this.ball = this.generate(Ball);
+        this.options = {
+            scope: 0,
+            multiplier: 1,
+        };
         this.blocksGenerate({gap: 50, row: 3, size: {w: 200, h: 50}});
         this.bindKeyEvents();
     }
 
     bindKeyEvents() {
-        document.addEventListener('block-collision',evt => this.removeElement(evt.detail.block));
+        document.addEventListener('block-collision', evt => this.ballBounce(evt.detail.block));
     }
 
     blocksGenerate(options) {
@@ -221,15 +237,36 @@ class Game {
     removeElement(item) {
         const ind = this.elements.indexOf(item);
         if (ind !== -1) {
-            console.log(ind);
             this.elements.splice(ind, 1);
 
         }
     }
 
+    getPanel() {
+        return `
+            <span class="score">Очки: ${this.options.scope}</span>
+            <span class="timer">Таймер: </span>
+            `;
+    }
+
+    ballBounce(item) {
+        this.removeElement(item);
+        this.addScore();
+    }
+
+    addScore() {
+        this.options.scope += this.options.multiplier;
+        this.options.multiplier++;
+    }
+
+    update() {
+        this.$panel.html(this.getPanel());
+    }
+
     loop() {
         requestAnimationFrame(() => {
             this.updateElements();
+            this.update();
             this.loop();
         });
     }

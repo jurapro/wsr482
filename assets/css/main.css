@@ -3,6 +3,9 @@
     margin: 0;
     box-sizing: border-box;
 }
+:root {
+    --h-panel: 80px;
+}
 
 #game {
     min-width: 800px;
@@ -14,7 +17,7 @@
 
 .elements {
     width: 100%;
-    height: 100%;
+    height: calc(100% - var(--h-panel));
     position: relative;
 }
 
@@ -35,4 +38,15 @@
 .block {
     background-color: blue;
     border-radius: .5rem;
+}
+
+.panel {
+    background-color: burlywood;
+    height: var(--h-panel);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    font-size: 2rem;
+    color: white;
 }
