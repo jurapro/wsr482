@@ -154,6 +154,10 @@ class Ball extends Drawable {
                 this.changeRandomDirection();
             }
             this.changeDirectionY();
+            if (this.isCollision(this.game.player)) {
+                document.dispatchEvent(new CustomEvent('player-collision'));
+            }
+
         }
         if (this.isLeftBorderCollision() || this.isRightBorderCollision()) {
             this.changeDirectionX();
@@ -190,7 +194,6 @@ class Block extends Drawable {
     }
 }
 
-
 class Game {
     constructor() {
         this.$html = $('#game .elements');
@@ -202,6 +205,10 @@ class Game {
         this.options = {
             scope: 0,
             multiplier: 1,
+            pause: false,
+        };
+        this.keys = {
+            Escape: false,
         };
         this.blocksGenerate({gap: 50, row: 3, size: {w: 200, h: 50}});
         this.bindKeyEvents();
@@ -209,6 +216,15 @@ class Game {
 
     bindKeyEvents() {
         document.addEventListener('block-collision', evt => this.ballBounce(evt.detail.block));
+        document.addEventListener('player-collision', () => this.clearMultiplier());
+        document.addEventListener('keyup',ev => this.changeKeyStatus(ev.code));
+
+    }
+
+    changeKeyStatus(code) {
+        if (code in this.keys) {
+            this.keys[code] = !this.keys[code];
+        }
     }
 
     blocksGenerate(options) {
@@ -259,14 +275,35 @@ class Game {
         this.options.multiplier++;
     }
 
+    clearMultiplier() {
+        this.options.multiplier = 1;
+    }
+
     update() {
         this.$panel.html(this.getPanel());
     }
 
+    updatePause() {
+        if (this.options.pause === this.keys.Escape) return;
+
+        this.options.pause = this.keys.Escape;
+
+        if (this.options.pause) {
+            this.$panel.addClass('pause');
+        } else {
+            this.$panel.removeClass('pause');
+        }
+
+
+    }
+
     loop() {
         requestAnimationFrame(() => {
-            this.updateElements();
-            this.update();
+            if (!this.options.pause) {
+                this.updateElements();
+                this.update();
+            }
+            this.updatePause();
             this.loop();
         });
     }
@@ -277,6 +314,7 @@ class Game {
             element.draw();
         });
     }
+
 
     start() {
         this.loop();
