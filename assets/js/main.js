@@ -72,6 +72,10 @@ class Drawable {
     isTopBorderCollision() {
         return this.position.y - this.speedPerFrame < 0;
     }
+
+    isButtonBorderCollision() {
+        return this.position.y - this.speedPerFrame > this.game.$html.height();
+    }
 }
 
 class Player extends Drawable {
@@ -162,6 +166,9 @@ class Ball extends Drawable {
         if (this.isLeftBorderCollision() || this.isRightBorderCollision()) {
             this.changeDirectionX();
         }
+        if (this.isButtonBorderCollision()) {
+            document.dispatchEvent(new CustomEvent('end-game'));
+        }
     }
 
     changeDirectionY() {
@@ -198,27 +205,33 @@ class Game {
     constructor() {
         this.$html = $('#game .elements');
         this.$panel = $('#game .panel');
-
         this.elements = [];
+        this.newGame();
+        this.bindKeyEvents();
+    }
+
+    newGame() {
         this.player = this.generate(Player);
         this.ball = this.generate(Ball);
         this.options = {
             scope: 0,
             multiplier: 1,
             pause: false,
+            timer: 15,
+            currentTime: this.getTime(),
         };
         this.keys = {
             Escape: false,
         };
+
         this.blocksGenerate({gap: 50, row: 3, size: {w: 200, h: 50}});
-        this.bindKeyEvents();
     }
 
     bindKeyEvents() {
         document.addEventListener('block-collision', evt => this.ballBounce(evt.detail.block));
         document.addEventListener('player-collision', () => this.clearMultiplier());
-        document.addEventListener('keyup',ev => this.changeKeyStatus(ev.code));
-
+        document.addEventListener('end-game', () => this.endGame());
+        document.addEventListener('keyup', ev => this.changeKeyStatus(ev.code));
     }
 
     changeKeyStatus(code) {
@@ -254,15 +267,31 @@ class Game {
         const ind = this.elements.indexOf(item);
         if (ind !== -1) {
             this.elements.splice(ind, 1);
-
         }
     }
 
     getPanel() {
         return `
             <span class="score">Очки: ${this.options.scope}</span>
-            <span class="timer">Таймер: </span>
+            <span class="timer">Таймер: ${this.getTimer().min}:${this.getTimer().sec}</span>
             `;
+    }
+
+    getTime() {
+        return Math.trunc(new Date().getTime() / 1000);
+    }
+
+    getTimer() {
+        let min = Math.trunc(this.options.timer / 60);
+        if (min < 10) {
+            min = '0' + min;
+        }
+        let sec = this.options.timer % 60;
+        if (sec < 10) {
+            sec = '0' + sec;
+        }
+
+        return {min: min, sec: sec};
     }
 
     ballBounce(item) {
@@ -280,7 +309,18 @@ class Game {
     }
 
     update() {
+        this.updateTime();
         this.$panel.html(this.getPanel());
+    }
+
+    updateTime() {
+        if (this.options.currentTime === this.getTime()) return;
+        this.options.currentTime = this.getTime();
+        if (this.options.timer > 0) {
+            this.options.timer--;
+            return;
+        }
+        document.dispatchEvent(new CustomEvent('end-game'));
     }
 
     updatePause() {
@@ -296,6 +336,7 @@ class Game {
 
 
     }
+
 
     loop() {
         requestAnimationFrame(() => {
@@ -315,9 +356,20 @@ class Game {
         });
     }
 
-
     start() {
         this.loop();
+    }
+
+    restart() {
+        this.elements = [];
+        this.$html.html('');
+        this.newGame();
+    }
+
+    endGame() {
+        this.options.pause = true;
+        alert('Конец игры');
+        this.restart();
     }
 }
 
